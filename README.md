@@ -1,4 +1,4 @@
-# generic-bigquery
+# generic-bigquery-merge
 
 ## merge.sql
 creating a truly generic MERGE statement in pure static SQL isn't possible because SQL requires explicit table and column names. However, you can achieve reusability in BigQuery using Dynamic SQL within Scripting or Stored Procedures.
@@ -40,3 +40,48 @@ WHEN NOT MATCHED BY SOURCE: This script doesn't include a WHEN NOT MATCHED BY SO
 Region: Ensure the INFORMATION_SCHEMA query targets the correct region if your datasets are not in the default location for your queries. You might need to specify the region explicitly (e.g., region-us.INFORMATION_SCHEMA.COLUMNS). The example tries to infer project/dataset, but be mindful of regionality.
 
 This stored procedure provides a powerful and reusable way to perform standard MERGE operations across different tables in BigQuery without rewriting the core logic each time.
+
+# calling stored procedure from airflow
+Steps & Example DAG:
+
+Import necessary modules: You'll need DAG, datetime, and BigQueryExecuteQueryOperator.
+
+Define the DAG: Set up your DAG with its schedule, start date, etc.
+
+Use BigQueryExecuteQueryOperator:
+
+Set the task_id.
+
+Set the sql parameter to the CALL statement for your stored procedure.
+
+Set use_legacy_sql=False (Stored procedures use Standard SQL).
+
+Specify your gcp_conn_id.
+
+Optionally set the location if your dataset is not in the default location associated with your connection/project.
+
+Explanation:
+
+Configuration: Variables are set at the top for clarity (project ID, connection ID, dataset, procedure name, table details).
+
+key_columns_sql_array: This line constructs the string representation of a BigQuery ARRAY<STRING>. It takes the Python list KEY_COLUMNS, puts single quotes around each element, joins them with commas, and wraps the result in square brackets (e.g., ['customer_id', 'product_id'] becomes ['customer_id', 'product_id']).
+
+sql_call_statement: An f-string is used to build the CALL statement dynamically using the configuration variables.
+
+The procedure name ({GCP_PROJECT_ID}.{SP_DATASET}.{SP_NAME}) is enclosed in backticks (``) as recommended for fully qualified BigQuery identifiers.
+
+String arguments (TARGET_TABLE, SOURCE_TABLE) are enclosed in single quotes (' ').
+
+The array argument (key_columns_sql_array) is inserted directly as it's already formatted correctly.
+
+The JSON argument is passed as the SQL literal NULL. If you needed to pass an empty JSON object, you'd typically use PARSE_JSON('{}'). For more complex JSON, you might construct the JSON string carefully in Python first.
+
+BigQueryExecuteQueryOperator:
+
+sql: Receives the constructed CALL statement.
+
+use_legacy_sql=False: Crucial for Standard SQL features like stored procedures.
+
+location: Important if your procedure/datasets are not in the default BQ processing location for your project/connection.
+
+gcp_conn_id: Tells Airflow which credentials to use.
