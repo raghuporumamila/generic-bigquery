@@ -1,21 +1,24 @@
 # generic-bigquery-merge
 
 ## merge.sql
-creating a truly generic MERGE statement in pure static SQL isn't possible because SQL requires explicit table and column names. However, you can achieve reusability in BigQuery using Dynamic SQL within Scripting or Stored Procedures.
+Creating a truly generic MERGE statement in pure static SQL isn't possible because SQL requires explicit table and column names. However, you can achieve reusability in BigQuery using Dynamic SQL within Scripting or Stored Procedures.
 
 ### This approach involves:
 
-Querying Metadata: Using INFORMATION_SCHEMA.COLUMNS to get the column names for your source and target tables.
+#### Querying Metadata: 
+Using INFORMATION_SCHEMA.COLUMNS to get the column names for your source and target tables.
 
-Constructing the SQL String: Building the MERGE statement dynamically as a string, incorporating the retrieved column names.
+#### Constructing the SQL String: 
+Building the MERGE statement dynamically as a string, incorporating the retrieved column names.
 
-Executing the Dynamic SQL: Using EXECUTE IMMEDIATE to run the constructed statement.
+#### Executing the Dynamic SQL: 
+Using EXECUTE IMMEDIATE to run the constructed statement.
 
 Here's how you can implement this using a BigQuery Stored Procedure, which is the most common way to encapsulate reusable logic:
 
-Method: Stored Procedure with Dynamic SQL
-
-This procedure takes the target table, source table, and key column(s) as input and generates/executes the MERGE statement.
+#### Method: 
+Stored Procedure with Dynamic SQL
+This procedure takes the target table, source table, and key column(s) as input and generates/executes the MERGE statement. Please refer merge.sql
 
 ### Key Considerations and Potential Enhancements:
 
